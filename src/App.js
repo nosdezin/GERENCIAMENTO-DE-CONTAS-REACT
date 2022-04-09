@@ -1,19 +1,28 @@
 import "./App.css";
 import Form from "./components/Form";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Dashboard from "./components/Dashboard";
+import { dbFB } from "./components/Firebase";
+import { collection, getDocs, addDoc } from "firebase/firestore";
 
 function App() {
   const [loggin, setLoggin] = useState(false);
-  const [db, setDB] = useState([
-    { nome: "Edson", senha: "edson", UserType: "comum", id: 1 },
-    { nome: "Admin", senha: "admin", UserType: "admin", id: 2 },
-  ]);
+  const [db, setDB] = useState([]);
   const [user, setUser] = useState({});
   const [senhaLogin, setSenhaLogin] = useState("");
   const [nomeLogin, setNomeLogin] = useState("");
   const [senhaRegister, setSenhaRegister] = useState("");
   const [nomeRegister, setNomeRegister] = useState("");
+  const usersColletionRef = collection(dbFB, "contas");
+
+  useEffect(() => {
+    const getUsers = async () => {
+      const data = await getDocs(usersColletionRef);
+      setDB(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
+    };
+
+    getUsers();
+  }, []);
 
   const VerificationDBuser = (DatabaseUser) => {
     if (DatabaseUser.nome === nomeLogin && DatabaseUser.senha === senhaLogin) {
@@ -34,7 +43,7 @@ function App() {
 
   const handleCloseClick = () => setLoggin(false);
 
-  const handleRegisterClick = () => {
+  const handleRegisterClick = async () => {
     const AccountHandle = {
       nome: nomeRegister,
       senha: senhaRegister,
@@ -42,18 +51,13 @@ function App() {
       id: db.length + 1,
     };
 
-    setDB([...db, AccountHandle]);
+    await addDoc(usersColletionRef, AccountHandle);
   };
 
   return (
     <div>
       {loggin ? (
-        <Dashboard
-          user={user}
-          DataBase={db}
-          CloseBoard={handleCloseClick}
-          SetDataBase={setDB}
-        />
+        <Dashboard user={user} CloseBoard={handleCloseClick} />
       ) : (
         <Form
           nomeLogin={nomeLogin}

@@ -1,7 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Botao from "./Botao";
 import InputText from "./InputText";
 import UserCard from "./UserCard";
+import { dbFB } from "./Firebase";
+import {
+  collection,
+  getDocs,
+  addDoc,
+  deleteDoc,
+  doc,
+} from "firebase/firestore";
 
 export default function CRUD({ DataBase, SetDataBase }) {
   const [listageAccountDiv, setListageAccountDiv] = useState(false);
@@ -10,6 +18,26 @@ export default function CRUD({ DataBase, SetDataBase }) {
   const [NewNameAccount, setNewNameAccount] = useState("");
   const [NewPasswordAccount, setNewPasswordAccount] = useState("");
   const [NewTypeUser, setNewTypeUser] = useState("");
+  const usersColletionRef = collection(dbFB, "contas");
+  const [db, setDB] = useState([]);
+
+  useEffect(() => {
+    const getUsers = async () => {
+      const data = await getDocs(usersColletionRef);
+      setDB(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
+    };
+
+    getUsers();
+
+    setNewTypeUser("comum");
+  }, [db]);
+
+  const deleteAccount = async () => {
+    const id = AccountIDSelected;
+    const itemDoc = doc(dbFB, "contas", id);
+    // console.log(itemDoc);
+    await deleteDoc(itemDoc);
+  };
 
   const btnDiv = (func, state) => {
     if (state) {
@@ -21,27 +49,16 @@ export default function CRUD({ DataBase, SetDataBase }) {
 
   const selectPerson = (id) => setAccountIDSelected(id);
 
-  const DeleteAccount = () => {
-    const newDB = DataBase.filter((user) => {
-      if (user.id === AccountIDSelected) {
-        return false;
-      } else {
-        return true;
-      }
-    });
-
-    SetDataBase(newDB);
-  };
-
-  const CreateAccount = () => {
+  const CreateAccount = async () => {
     const AccountHandle = {
       nome: NewNameAccount,
       senha: NewPasswordAccount,
       UserType: NewTypeUser,
-      id: DataBase.length + 1,
+      id: db.length + 1,
     };
-
-    SetDataBase([...DataBase, AccountHandle]);
+    console.log(AccountHandle);
+    await addDoc(usersColletionRef, AccountHandle);
+    // setDB([...db, AccountHandle]);
     setNewNameAccount("");
     setNewPasswordAccount("");
     setNewTypeUser("");
@@ -52,7 +69,11 @@ export default function CRUD({ DataBase, SetDataBase }) {
       <h2 style={{ padding: "10px" }}>CRUD</h2>
       <div>
         <Botao
-          BtnText="Mostrar lista de contas"
+          BtnText={
+            !listageAccountDiv
+              ? "Mostrar lista de contas"
+              : "Ocultar lista de contas"
+          }
           BtnClick={() => btnDiv(setListageAccountDiv, listageAccountDiv)}
         />
         {listageAccountDiv && (
@@ -64,7 +85,7 @@ export default function CRUD({ DataBase, SetDataBase }) {
                 borderLeft: "0",
               }}
             >
-              {DataBase.map((user) => {
+              {db.map((user) => {
                 return (
                   <UserCard
                     user={user}
@@ -74,13 +95,18 @@ export default function CRUD({ DataBase, SetDataBase }) {
                 );
               })}
             </div>
+            <p>Id selecionado: {AccountIDSelected}</p>
             <Botao
-              BtnText="Mostrar Painel de criação de conta"
+              BtnText={
+                !painelCreateAccountDiv
+                  ? "Mostrar Painel de criação de conta"
+                  : "Ocultar Painel de criação de conta"
+              }
               BtnClick={() =>
                 btnDiv(setPainelCreateAccountDiv, painelCreateAccountDiv)
               }
             />
-            <Botao BtnText="Deletar conta" BtnClick={DeleteAccount} />
+            <Botao BtnText="Deletar conta" BtnClick={deleteAccount} />
 
             {painelCreateAccountDiv && (
               <div className="painel_create_account">
@@ -98,6 +124,7 @@ export default function CRUD({ DataBase, SetDataBase }) {
                   className="UserType_Input"
                   onClick={(e) => setNewTypeUser(e.target.value)}
                 >
+                  <option disabled>Escolha o tipo de usuario</option>
                   <option value="comum">Comum</option>
                   <option value="admin">admin</option>
                 </select>

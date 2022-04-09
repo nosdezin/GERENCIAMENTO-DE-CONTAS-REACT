@@ -2,7 +2,7 @@ import React from "react";
 import Botao from "./Botao";
 import CRUD from "./CRUD";
 
-export default function Dashboard({ user, DataBase, CloseBoard, SetDataBase }) {
+export default function Dashboard({ user, CloseBoard }) {
   return (
     <div>
       <div>
@@ -23,7 +23,7 @@ export default function Dashboard({ user, DataBase, CloseBoard, SetDataBase }) {
       </div>
 
       {user.UserType === "admin" && (
-        <CRUD DataBase={DataBase} SetDataBase={SetDataBase} />
+        <CRUD/>
       )}
     </div>
   );

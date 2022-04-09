@@ -18,6 +18,7 @@
   font-family: monospace;
   padding: 5px;
   font-size: 16px;
+  cursor: pointer;
 }
 
 .InputUI {
