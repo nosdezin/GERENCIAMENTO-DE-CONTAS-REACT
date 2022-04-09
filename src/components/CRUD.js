@@ -1,16 +1,21 @@
 import { useState } from "react";
 import Botao from "./Botao";
+import InputText from "./InputText";
 import UserCard from "./UserCard";
 
 export default function CRUD({ DataBase, SetDataBase }) {
   const [listageAccountDiv, setListageAccountDiv] = useState(false);
+  const [painelCreateAccountDiv, setPainelCreateAccountDiv] = useState(false);
   const [AccountIDSelected, setAccountIDSelected] = useState(0);
+  const [NewNameAccount, setNewNameAccount] = useState("");
+  const [NewPasswordAccount, setNewPasswordAccount] = useState("");
+  const [NewTypeUser, setNewTypeUser] = useState("");
 
-  const btnListage = () => {
-    if (listageAccountDiv) {
-      setListageAccountDiv(!listageAccountDiv);
+  const btnDiv = (func, state) => {
+    if (state) {
+      func(!state);
     } else {
-      setListageAccountDiv(!listageAccountDiv);
+      func(!state);
     }
   };
 
@@ -28,11 +33,28 @@ export default function CRUD({ DataBase, SetDataBase }) {
     SetDataBase(newDB);
   };
 
+  const CreateAccount = () => {
+    const AccountHandle = {
+      nome: NewNameAccount,
+      senha: NewPasswordAccount,
+      UserType: NewTypeUser,
+      id: DataBase.length + 1,
+    };
+
+    SetDataBase([...DataBase, AccountHandle]);
+    setNewNameAccount("");
+    setNewPasswordAccount("");
+    setNewTypeUser("");
+  };
+
   return (
-    <div style={{ border: "5px solid #000", width: "38%", borderLeft: "0" }}>
+    <div className="CRUD_painel">
       <h2 style={{ padding: "10px" }}>CRUD</h2>
       <div>
-        <Botao BtnText="Mostrar lista de contas" BtnClick={btnListage} />
+        <Botao
+          BtnText="Mostrar lista de contas"
+          BtnClick={() => btnDiv(setListageAccountDiv, listageAccountDiv)}
+        />
         {listageAccountDiv && (
           <div>
             <div
@@ -52,8 +74,36 @@ export default function CRUD({ DataBase, SetDataBase }) {
                 );
               })}
             </div>
-            <Botao BtnText="Criar uma conta" />
+            <Botao
+              BtnText="Mostrar Painel de criação de conta"
+              BtnClick={() =>
+                btnDiv(setPainelCreateAccountDiv, painelCreateAccountDiv)
+              }
+            />
             <Botao BtnText="Deletar conta" BtnClick={DeleteAccount} />
+
+            {painelCreateAccountDiv && (
+              <div className="painel_create_account">
+                <InputText
+                  placeholderText="Digite o nome do Usuario"
+                  ValueState={NewNameAccount}
+                  funcState={setNewNameAccount}
+                />
+                <InputText
+                  placeholderText="Digite a senha do Usuario"
+                  ValueState={NewPasswordAccount}
+                  funcState={setNewPasswordAccount}
+                />
+                <select
+                  className="UserType_Input"
+                  onClick={(e) => setNewTypeUser(e.target.value)}
+                >
+                  <option value="comum">Comum</option>
+                  <option value="admin">admin</option>
+                </select>
+                <Botao BtnText="Criar" BtnClick={CreateAccount} />
+              </div>
+            )}
           </div>
         )}
       </div>
